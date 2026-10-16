@@ -20,12 +20,12 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # No gradlew wrapper jar is committed (binary jar in a security-tooling
-      # repo is something you want to audit, not trust blindly) — setup-gradle
-      # provisions a pinned, verified Gradle instead.
       - name: Build debug APK
         run: gradle assembleDebug --no-daemon
 
