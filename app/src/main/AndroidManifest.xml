@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        DELIBERATELY NO <uses-permission android:name="android.permission.INTERNET" />
+
+        This app cannot make a single network call, by construction, in any
+        process. Training data and model weights never leave the device.
+        If you need to export a trained model, do it via the explicit
+        "Export" button (SAF file picker / share sheet), which is a user
+        action, not something the code can do silently.
+    -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.AISandbox"
+        android:usesCleartextTraffic="false">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            THE SANDBOX BOUNDARY.
+
+            android:isolatedProcess="true" makes the OS launch this service
+            under a throwaway, per-instance UID (app_zygote isolated uid)
+            that has:
+              - no network sockets (enforced below the app layer, by SELinux
+                / the kernel netfilter cgroup Android assigns isolated uids —
+                not something this app's code could bypass even if compromised)
+              - no access to this app's own files, SharedPreferences, or
+                ContentProviders (it is not "this app" as far as the
+                filesystem/DAC permissions are concerned)
+              - no access to any permission the app holds, even ones granted
+                at runtime, because isolated uids are never granted
+                permissions
+            The ONLY channel in or out is the Binder connection established
+            in TrainingService / TrainingServiceConnection, which carries
+            exactly the Bundle/byte[] payloads we choose to pass.
+
+            This is why this is a *real* sandbox and not just "a service
+            with a comment saying it's sandboxed": a compromised/malicious
+            TFLite custom op, a bug in the training loop, or a poisoned
+            training sample cannot exfiltrate anything or touch the rest of
+            the device, because the OS — not app code — enforces it.
+        -->
+        <service
+            android:name=".training.TrainingService"
+            android:exported="false"
+            android:isolatedProcess="true"
+            android:process=":training_sandbox" />
+
+    </application>
+</manifest>

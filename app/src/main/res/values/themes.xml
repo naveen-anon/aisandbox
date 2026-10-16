@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.AISandbox" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+</resources>

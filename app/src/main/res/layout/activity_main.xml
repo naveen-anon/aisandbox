@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Not bound"
+        android:textSize="14sp"
+        android:paddingBottom="16dp" />
+
+    <Button android:id="@+id/btnStartSandbox" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="1. Start sandbox process" />
+
+    <Button android:id="@+id/btnLoadModel" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="2. Load base model" />
+
+    <Spinner android:id="@+id/spinnerLabel" android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button android:id="@+id/btnAddSample" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="3. Add labeled sample" />
+
+    <Button android:id="@+id/btnTrain" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="4. Train" />
+
+    <Button android:id="@+id/btnCancel" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="Cancel training" />
+
+</LinearLayout>
