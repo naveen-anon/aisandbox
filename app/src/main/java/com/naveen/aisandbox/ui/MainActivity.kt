@@ -32,14 +32,18 @@ class MainActivity : AppCompatActivity(), SandboxController.Listener {
         }
 
         binding.btnLoadModel.setOnClickListener {
-            val modelBytes = assets.open("base_model.tflite").use { it.readBytes() }
-            controller.initModel(modelBytes)
-            setStatus("Sent base model to sandbox (${modelBytes.size} bytes)")
+            try {
+                val modelBytes = assets.open("base_model.tflite").use { it.readBytes() }
+                controller.initModel(modelBytes)
+                setStatus("Sent base model to sandbox (${modelBytes.size} bytes)")
+            } catch (e: Exception) {
+                setStatus("ERROR: base_model.tflite missing from assets — " +
+                    "run tools/build_base_model.py on a PC with TensorFlow, " +
+                    "commit the output, rebuild. (${e.javaClass.simpleName}: ${e.message})")
+            }
         }
 
         binding.btnAddSample.setOnClickListener {
-            // Wire this to your camera/gallery picker; shown here as the
-            // contract that matters: raw normalized RGB bytes + a label index.
             val label = binding.spinnerLabel.selectedItemPosition
             val dummyImage = ByteArray(ModelSpec.IMAGE_WIDTH * ModelSpec.IMAGE_HEIGHT * ModelSpec.IMAGE_CHANNELS)
             controller.addSample(dummyImage, label)
