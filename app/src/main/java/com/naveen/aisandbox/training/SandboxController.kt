@@ -7,14 +7,6 @@ import android.content.ServiceConnection
 import android.os.*
 import com.naveen.aisandbox.ipc.TrainingProtocol
 
-/**
- * Runs in the normal app process. Owns the bound connection to the
- * isolated `:training_sandbox` process and translates its Messenger
- * protocol into plain Kotlin callbacks for the UI layer.
- *
- * This is the ONLY class in the main process allowed to talk to the
- * sandbox. Keep it that way — don't let Activities bind directly.
- */
 class SandboxController(private val context: Context) {
 
     interface Listener {
@@ -73,9 +65,10 @@ class SandboxController(private val context: Context) {
         serviceMessenger = null
     }
 
-    fun initModel(modelBytes: ByteArray) {
+    fun initModel(featureModelBytes: ByteArray, headModelBytes: ByteArray) {
         sendToSandbox(TrainingProtocol.MSG_INIT_MODEL, Bundle().apply {
-            putByteArray(TrainingProtocol.KEY_MODEL_BYTES, modelBytes)
+            putByteArray(TrainingProtocol.KEY_FEATURE_MODEL_BYTES, featureModelBytes)
+            putByteArray(TrainingProtocol.KEY_HEAD_MODEL_BYTES, headModelBytes)
         })
     }
 

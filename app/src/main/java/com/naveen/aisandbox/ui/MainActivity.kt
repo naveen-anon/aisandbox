@@ -33,11 +33,12 @@ class MainActivity : AppCompatActivity(), SandboxController.Listener {
 
         binding.btnLoadModel.setOnClickListener {
             try {
-                val modelBytes = assets.open("base_model.tflite").use { it.readBytes() }
-                controller.initModel(modelBytes)
-                setStatus("Sent base model to sandbox (${modelBytes.size} bytes)")
+                val featureBytes = assets.open("feature_extractor.tflite").use { it.readBytes() }
+                val headBytes = assets.open("head_model.tflite").use { it.readBytes() }
+                controller.initModel(featureBytes, headBytes)
+                setStatus("Sent models to sandbox (feature=${featureBytes.size}B, head=${headBytes.size}B)")
             } catch (e: Exception) {
-                setStatus("ERROR: base_model.tflite missing from assets — " +
+                setStatus("ERROR: feature_extractor.tflite / head_model.tflite missing from assets — " +
                     "run tools/build_base_model.py on a PC with TensorFlow, " +
                     "commit the output, rebuild. (${e.javaClass.simpleName}: ${e.message})")
             }

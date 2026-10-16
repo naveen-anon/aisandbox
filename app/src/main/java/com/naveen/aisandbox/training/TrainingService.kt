@@ -6,17 +6,6 @@ import android.os.*
 import com.naveen.aisandbox.ipc.TrainingProtocol
 import kotlin.concurrent.thread
 
-/**
- * Lives in the isolated `:training_sandbox` process (see AndroidManifest).
- * This class, and everything it calls, runs under a throwaway OS uid with
- * no network, no access to this app's real files, and no permissions.
- *
- * Communication is a plain Handler/Messenger pair — classic AIDL-less IPC.
- * We deliberately do NOT use a ContentProvider or shared file for this:
- * isolated processes can't resolve this app's ContentProviders anyway, and
- * keeping everything as in-memory Bundle payloads over Binder is what
- * keeps the boundary airtight.
- */
 class TrainingService : Service() {
 
     private var trainer: SandboxTrainer? = null
@@ -46,10 +35,12 @@ class TrainingService : Service() {
 
         when (msg.what) {
             TrainingProtocol.MSG_INIT_MODEL -> {
-                val modelBytes = data.getByteArray(TrainingProtocol.KEY_MODEL_BYTES)
-                    ?: error("no model bytes supplied")
+                val featureBytes = data.getByteArray(TrainingProtocol.KEY_FEATURE_MODEL_BYTES)
+                    ?: error("no feature model bytes supplied")
+                val headBytes = data.getByteArray(TrainingProtocol.KEY_HEAD_MODEL_BYTES)
+                    ?: error("no head model bytes supplied")
                 trainer?.close()
-                trainer = SandboxTrainer(modelBytes)
+                trainer = SandboxTrainer(featureBytes, headBytes)
                 send(TrainingProtocol.MSG_READY, Bundle())
             }
 
@@ -63,8 +54,6 @@ class TrainingService : Service() {
                 val epochs = data.getInt(TrainingProtocol.KEY_EPOCHS, 5)
                 val batchSize = data.getInt(TrainingProtocol.KEY_BATCH_SIZE, 8)
                 val t = requireTrainer()
-                // Run off the Binder/main thread of this isolated process so
-                // progress messages can still be pumped out during training.
                 thread(name = "sandbox-train") {
                     try {
                         val (checkpoint, finalLoss) = t.train(epochs, batchSize) { epoch, step, loss ->
@@ -103,7 +92,6 @@ class TrainingService : Service() {
         try {
             reply.send(m)
         } catch (_: RemoteException) {
-            // client process died; nothing to do, isolated process will be torn down too
         }
     }
 
