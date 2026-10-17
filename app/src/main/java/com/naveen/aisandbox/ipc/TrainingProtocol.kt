@@ -11,8 +11,13 @@ object TrainingProtocol {
     const val MSG_TRAINING_ERROR = 102
     const val MSG_READY = 103
 
-    const val KEY_FEATURE_MODEL_BYTES = "feature_model_bytes"
-    const val KEY_HEAD_MODEL_BYTES = "head_model_bytes"
+    const val KEY_FEATURE_MODEL_FD = "feature_model_fd"
+    const val KEY_FEATURE_MODEL_OFFSET = "feature_model_offset"
+    const val KEY_FEATURE_MODEL_LENGTH = "feature_model_length"
+    const val KEY_HEAD_MODEL_FD = "head_model_fd"
+    const val KEY_HEAD_MODEL_OFFSET = "head_model_offset"
+    const val KEY_HEAD_MODEL_LENGTH = "head_model_length"
+
     const val KEY_IMAGE_BYTES = "image_bytes"
     const val KEY_LABEL_INDEX = "label_index"
     const val KEY_EPOCHS = "epochs"

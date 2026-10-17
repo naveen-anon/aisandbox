@@ -33,14 +33,14 @@ class MainActivity : AppCompatActivity(), SandboxController.Listener {
 
         binding.btnLoadModel.setOnClickListener {
             try {
-                val featureBytes = assets.open("feature_extractor.tflite").use { it.readBytes() }
-                val headBytes = assets.open("head_model.tflite").use { it.readBytes() }
-                controller.initModel(featureBytes, headBytes)
-                setStatus("Sent models to sandbox (feature=${featureBytes.size}B, head=${headBytes.size}B)")
+                val featureAfd = assets.openFd("feature_extractor.tflite")
+                val headAfd = assets.openFd("head_model.tflite")
+                controller.initModel(featureAfd, headAfd)
+                setStatus("Sent model FDs to sandbox (feature=${featureAfd.length}B, head=${headAfd.length}B)")
             } catch (e: Exception) {
-                setStatus("ERROR: feature_extractor.tflite / head_model.tflite missing from assets — " +
-                    "run tools/build_base_model.py on a PC with TensorFlow, " +
-                    "commit the output, rebuild. (${e.javaClass.simpleName}: ${e.message})")
+                setStatus("ERROR: feature_extractor.tflite / head_model.tflite missing or not openFd-able — " +
+                    "run tools/build_base_model.py, commit output, rebuild. " +
+                    "(${e.javaClass.simpleName}: ${e.message})")
             }
         }
 

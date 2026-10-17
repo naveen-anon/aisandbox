@@ -1,13 +1,22 @@
 package com.naveen.aisandbox.training
 
+import android.os.ParcelFileDescriptor
 import com.naveen.aisandbox.ipc.ModelSpec
 import org.tensorflow.lite.Interpreter
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import java.io.FileInputStream
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
 
-class SandboxTrainer(featureModelBytes: ByteArray, headModelBytes: ByteArray) {
+class SandboxTrainer(
+    featureModelFd: ParcelFileDescriptor,
+    featureOffset: Long,
+    featureLength: Long,
+    headModelFd: ParcelFileDescriptor,
+    headOffset: Long,
+    headLength: Long
+) {
 
     private val featureInterpreter: Interpreter
     private val headInterpreter: Interpreter
@@ -20,15 +29,17 @@ class SandboxTrainer(featureModelBytes: ByteArray, headModelBytes: ByteArray) {
 
     init {
         val opts = Interpreter.Options().apply { numThreads = 2 }
-        featureInterpreter = Interpreter(toDirectBuffer(featureModelBytes), opts)
-        headInterpreter = Interpreter(toDirectBuffer(headModelBytes), opts)
+        val featureBuf = mapFd(featureModelFd, featureOffset, featureLength)
+        val headBuf = mapFd(headModelFd, headOffset, headLength)
+        featureInterpreter = Interpreter(featureBuf, opts)
+        headInterpreter = Interpreter(headBuf, opts)
     }
 
-    private fun toDirectBuffer(bytes: ByteArray): ByteBuffer =
-        ByteBuffer.allocateDirect(bytes.size).order(ByteOrder.nativeOrder()).apply {
-            put(bytes)
-            rewind()
+    private fun mapFd(pfd: ParcelFileDescriptor, offset: Long, length: Long): MappedByteBuffer {
+        FileInputStream(pfd.fileDescriptor).use { fis ->
+            return fis.channel.map(FileChannel.MapMode.READ_ONLY, offset, length)
         }
+    }
 
     fun addSample(imageBytes: ByteArray, label: Int) {
         require(label in 0 until ModelSpec.NUM_CLASSES) { "label out of range: $label" }

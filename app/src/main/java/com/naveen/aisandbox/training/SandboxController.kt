@@ -2,6 +2,7 @@ package com.naveen.aisandbox.training
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.res.AssetFileDescriptor
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.*
@@ -65,10 +66,14 @@ class SandboxController(private val context: Context) {
         serviceMessenger = null
     }
 
-    fun initModel(featureModelBytes: ByteArray, headModelBytes: ByteArray) {
+    fun initModel(featureModel: AssetFileDescriptor, headModel: AssetFileDescriptor) {
         sendToSandbox(TrainingProtocol.MSG_INIT_MODEL, Bundle().apply {
-            putByteArray(TrainingProtocol.KEY_FEATURE_MODEL_BYTES, featureModelBytes)
-            putByteArray(TrainingProtocol.KEY_HEAD_MODEL_BYTES, headModelBytes)
+            putParcelable(TrainingProtocol.KEY_FEATURE_MODEL_FD, featureModel.parcelFileDescriptor)
+            putLong(TrainingProtocol.KEY_FEATURE_MODEL_OFFSET, featureModel.startOffset)
+            putLong(TrainingProtocol.KEY_FEATURE_MODEL_LENGTH, featureModel.length)
+            putParcelable(TrainingProtocol.KEY_HEAD_MODEL_FD, headModel.parcelFileDescriptor)
+            putLong(TrainingProtocol.KEY_HEAD_MODEL_OFFSET, headModel.startOffset)
+            putLong(TrainingProtocol.KEY_HEAD_MODEL_LENGTH, headModel.length)
         })
     }
 

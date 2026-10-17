@@ -35,12 +35,23 @@ class TrainingService : Service() {
 
         when (msg.what) {
             TrainingProtocol.MSG_INIT_MODEL -> {
-                val featureBytes = data.getByteArray(TrainingProtocol.KEY_FEATURE_MODEL_BYTES)
-                    ?: error("no feature model bytes supplied")
-                val headBytes = data.getByteArray(TrainingProtocol.KEY_HEAD_MODEL_BYTES)
-                    ?: error("no head model bytes supplied")
+                data.classLoader = ParcelFileDescriptor::class.java.classLoader
+                val featureFd = data.getParcelable<ParcelFileDescriptor>(TrainingProtocol.KEY_FEATURE_MODEL_FD)
+                    ?: error("no feature model fd supplied")
+                val featureOffset = data.getLong(TrainingProtocol.KEY_FEATURE_MODEL_OFFSET)
+                val featureLength = data.getLong(TrainingProtocol.KEY_FEATURE_MODEL_LENGTH)
+                val headFd = data.getParcelable<ParcelFileDescriptor>(TrainingProtocol.KEY_HEAD_MODEL_FD)
+                    ?: error("no head model fd supplied")
+                val headOffset = data.getLong(TrainingProtocol.KEY_HEAD_MODEL_OFFSET)
+                val headLength = data.getLong(TrainingProtocol.KEY_HEAD_MODEL_LENGTH)
+
                 trainer?.close()
-                trainer = SandboxTrainer(featureBytes, headBytes)
+                trainer = try {
+                    SandboxTrainer(featureFd, featureOffset, featureLength, headFd, headOffset, headLength)
+                } finally {
+                    featureFd.close()
+                    headFd.close()
+                }
                 send(TrainingProtocol.MSG_READY, Bundle())
             }
 
